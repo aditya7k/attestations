@@ -12,7 +12,6 @@ import (
 func Test_CreateProvenanceStatement(t *testing.T) {
 
 	// Arrange
-
 	predicateBuilder := PredicateBuilder{
 		ID: "example.com/builder",
 	}
@@ -46,8 +45,6 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 	}
 
 	// Act
-
-	// Step 3: Marshal the statement into JSON
 	attBytes, err := json.Marshal(statement)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error marshaling statement: %v\n", err)
@@ -63,12 +60,20 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 
 	j := jsonmap.FromMap(jsonMap)
 
-	assert.Equal(t, "example.com/builder", j.Get("predicate.builder.id").AsString(), "for path predicate.builder.id expected 'example.com/builder'")
-	assert.Equal(t, "git+https://github.com/example/repo", j.Get("predicate.invocation.configSource.uri").AsString(), "expected 'git+https://github.com/example/repo'")
-	assert.Equal(t, "build script", j.Get("predicate.invocation.configSource.entryPoint").AsString(), "expected 'build script'")
-	assert.Equal(t, "example.com/my-artifact", j.Get("subject.name").AsString(), "expected 'example.com/my-artifact'")
-	assert.Equal(t, "abcd1234", j.Get("subject.digest.sha256").AsString(), "expected 'abcd1234'")
-	assert.Equal(t, "https://example.com/build/type", j.Get("predicate.buildType").AsString(), "expected 'https://example.com/build/type'")
-	assert.Equal(t, "https://slsa.dev/provenance/v0.1", j.Get("predicateType").AsString(), "expected 'https://slsa.dev/provenance/v0.1'")
-	assert.Equal(t, "https://in-toto.io/Statement/v0.1", j.Get("_type").AsString(), "expected 'https://in-toto.io/Statement/v0.1'")
+	assertJsonString(t, j, "example.com/buildere", "predicate.builder.id")
+	assertJsonString(t, j, "git+https://github.com/example/repo", "predicate.invocation.configSource.uri")
+	assertJsonString(t, j, "build script", "predicate.invocation.configSource.entryPoint")
+	assertJsonString(t, j, "example.com/my-artifact", "subject.name")
+	assertJsonString(t, j, "abcd1234", "subject.digest.sha256")
+	assertJsonString(t, j, "https://example.com/build/type", "predicate.buildType")
+	assertJsonString(t, j, "https://slsa.dev/provenance/v0.1", "predicateType")
+	assertJsonString(t, j, "https://in-toto.io/Statement/v0.1", "_type")
+}
+
+func assertJsonString(t *testing.T, j *jsonmap.Json, expected string, key string) {
+	value := j.Get(key).AsString()
+	if value == "" {
+		t.Errorf("path %s does not exist", key)
+	}
+	assert.Equal(t, expected, value, fmt.Sprintf("for path %s expected %s, actual %s", key, expected, value))
 }
