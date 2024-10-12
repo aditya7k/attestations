@@ -60,7 +60,7 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 
 	j := jsonmap.FromMap(jsonMap)
 
-	assertJsonString(t, j, "example.com/buildere", "predicate.builder.id")
+	assertJsonString(t, j, "example.com/builder", "predicate.builder.id")
 	assertJsonString(t, j, "git+https://github.com/example/repo", "predicate.invocation.configSource.uri")
 	assertJsonString(t, j, "build script", "predicate.invocation.configSource.entryPoint")
 	assertJsonString(t, j, "example.com/my-artifact", "subject.name")
@@ -75,5 +75,5 @@ func assertJsonString(t *testing.T, j *jsonmap.Json, expected string, key string
 	if value == "" {
 		t.Errorf("path %s does not exist", key)
 	}
-	assert.Equal(t, expected, value, fmt.Sprintf("for path %s expected %s, actual %s", key, expected, value))
+	assert.Equal(t, expected, value, "for path: '%s' expected: '%s', actual: '%s'", key, expected, value)
 }
