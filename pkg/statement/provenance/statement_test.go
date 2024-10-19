@@ -12,27 +12,15 @@ import (
 func Test_CreateProvenanceStatement(t *testing.T) {
 
 	// Arrange
-	invocationConfigSource := NewInvocationConfigSource(
-		withConfigSourceUri("https://github.com/example/repo"),
-		withConfigSourceDigest(map[string]string{"sha1": "abc123"}),
-		withConfigSourceEntryPoint("build script"))
-
-	predicateBuilder := PredicateBuilder{ID: "example.com/builder"}
-
-	predicateInvocation := PredicateInvocation{ConfigSource: *invocationConfigSource}
-
-	predicate := NewSLSAProvenancePredicate(
-		withBuildType("https://example.com/build/type"),
-		withPredicateBuilder(predicateBuilder),
-		withPredicateInvocation(predicateInvocation))
-
-	subjectStatement := NewSubjectStatement(
-		withSubjectName("example.com/my-artifact"),
-		withSubjectDigest(map[string]string{"sha256": "abcd1234"}))
-
-	statement := NewProvenanceStatement(
-		withPredicate(*predicate),
-		withSubject(*subjectStatement))
+	statement := buildProvenanceStatement(PredicateStatementDTO{
+		configURI:          "https://github.com/example/repo",
+		configDigest:       map[string]string{"sha1": "abc123"},
+		configEntryPoint:   "build script",
+		predicateBuilderId: "example.com/builder",
+		predicateBuildType: "https://example.com/build/type",
+		subjectName:        "example.com/my-artifact",
+		subjectDigest:      map[string]string{"sha256": "abcd1234"},
+	})
 
 	// Act
 	attBytes, err := json.Marshal(statement)
@@ -50,8 +38,8 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 
 	j := jsonmap.FromMap(jsonMap)
 
-	assertJsonString(t, j, "example.com/builder", "predicate.builder.id")
 	assertJsonString(t, j, "https://github.com/example/repo", "predicate.invocation.configSource.uri")
+	assertJsonString(t, j, "example.com/builder", "predicate.builder.id")
 	assertJsonString(t, j, "build script", "predicate.invocation.configSource.entryPoint")
 	assertJsonString(t, j, "example.com/my-artifact", "subject.name")
 	assertJsonString(t, j, "abcd1234", "subject.digest.sha256")
