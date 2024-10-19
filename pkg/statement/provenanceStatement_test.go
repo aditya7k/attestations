@@ -12,37 +12,27 @@ import (
 func Test_CreateProvenanceStatement(t *testing.T) {
 
 	// Arrange
-	predicateBuilder := PredicateBuilder{
-		ID: "example.com/builder",
-	}
+	invocationConfigSource := NewInvocationConfigSource(
+		withConfigSourceUri(),
+		withConfigSourceDigest(),
+		withConfigSourceEntryPoint())
 
-	invocationConfigSource := InvocationConfigSource{
-		URI:        "git+https://github.com/example/repo",
-		Digest:     map[string]string{"sha1": "abc123"},
-		EntryPoint: "build script",
-	}
+	predicateBuilder := PredicateBuilder{ID: "example.com/builder"}
 
-	predicateInvocation := PredicateInvocation{
-		ConfigSource: invocationConfigSource,
-	}
+	predicateInvocation := PredicateInvocation{ConfigSource: *invocationConfigSource}
 
-	predicate := SLSAProvenancePredicate{
-		BuildType:  "https://example.com/build/type",
-		Builder:    predicateBuilder,
-		Invocation: predicateInvocation,
-	}
+	predicate := NewSLSAProvenancePredicate(
+		withBuildType(),
+		withPredicateBuilder(predicateBuilder),
+		withPredicateInvocation(predicateInvocation))
 
-	subjectStatement := SubjectStatement{
-		Name:   "example.com/my-artifact",
-		Digest: map[string]string{"sha256": "abcd1234"},
-	}
+	subjectStatement := NewSubjectStatement(
+		withSubjectName(),
+		withSubjectDigest())
 
-	statement := ProvenanceStatement{
-		Type:          inTotoStatementType,
-		PredicateType: predicateType,
-		Subject:       subjectStatement,
-		Predicate:     predicate,
-	}
+	statement := NewProvenanceStatement(
+		withPredicate(*predicate),
+		withSubject(*subjectStatement))
 
 	// Act
 	attBytes, err := json.Marshal(statement)
@@ -61,7 +51,7 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 	j := jsonmap.FromMap(jsonMap)
 
 	assertJsonString(t, j, "example.com/builder", "predicate.builder.id")
-	assertJsonString(t, j, "git+https://github.com/example/repo", "predicate.invocation.configSource.uri")
+	assertJsonString(t, j, "https://github.com/example/repo", "predicate.invocation.configSource.uri")
 	assertJsonString(t, j, "build script", "predicate.invocation.configSource.entryPoint")
 	assertJsonString(t, j, "example.com/my-artifact", "subject.name")
 	assertJsonString(t, j, "abcd1234", "subject.digest.sha256")
@@ -76,4 +66,110 @@ func assertJsonString(t *testing.T, j *jsonmap.Json, expected string, key string
 		t.Errorf("path %s does not exist", key)
 	}
 	assert.Equal(t, expected, value, "for path: '%s' expected: '%s', actual: '%s'", key, expected, value)
+}
+
+func NewInvocationConfigSource(options ...func(_ *InvocationConfigSource)) *InvocationConfigSource {
+	invocationConfigSource := &InvocationConfigSource{}
+	for _, o := range options {
+		o(invocationConfigSource)
+	}
+	return invocationConfigSource
+}
+
+func withConfigSourceUri() func(invocationConfigSource *InvocationConfigSource) {
+	return func(invocationConfigSource *InvocationConfigSource) {
+		invocationConfigSource.URI = "https://github.com/example/repo"
+	}
+}
+
+func withConfigSourceDigest() func(invocationConfigSource *InvocationConfigSource) {
+	return func(invocationConfigSource *InvocationConfigSource) {
+		invocationConfigSource.Digest = map[string]string{"sha1": "abc123"}
+	}
+}
+
+func withConfigSourceEntryPoint() func(invocationConfigSource *InvocationConfigSource) {
+	return func(invocationConfigSource *InvocationConfigSource) {
+		invocationConfigSource.EntryPoint = "build script"
+	}
+}
+
+func NewSLSAProvenancePredicate(options ...func(_ *SLSAProvenancePredicate)) *SLSAProvenancePredicate {
+	predicate := &SLSAProvenancePredicate{}
+	for _, o := range options {
+		o(predicate)
+	}
+	return predicate
+}
+
+func withBuildType() func(predicate *SLSAProvenancePredicate) {
+	return func(predicate *SLSAProvenancePredicate) {
+		predicate.BuildType = "https://example.com/build/type"
+	}
+}
+
+func withPredicateBuilder(predicateBuilder PredicateBuilder) func(predicate *SLSAProvenancePredicate) {
+	return func(predicate *SLSAProvenancePredicate) {
+		predicate.Builder = predicateBuilder
+	}
+}
+
+func withPredicateInvocation(predicateInvocation PredicateInvocation) func(predicate *SLSAProvenancePredicate) {
+	return func(predicate *SLSAProvenancePredicate) {
+		predicate.Invocation = predicateInvocation
+	}
+}
+
+func NewSubjectStatement(options ...func(_ *SubjectStatement)) *SubjectStatement { //nolint:interfacer
+	subjectStatement := &SubjectStatement{}
+	for _, o := range options {
+		o(subjectStatement)
+	}
+	return subjectStatement
+}
+
+func withSubjectName() func(subjectStatement *SubjectStatement) {
+	return func(subjectStatement *SubjectStatement) {
+		subjectStatement.Name = "example.com/my-artifact"
+	}
+}
+
+func withSubjectDigest() func(subjectStatement *SubjectStatement) {
+	return func(subjectStatement *SubjectStatement) {
+		subjectStatement.Digest = map[string]string{"sha256": "abcd1234"}
+	}
+}
+
+func NewProvenanceStatement(options ...func(_ *ProvenanceStatement)) *ProvenanceStatement {
+	provenanceStatement := &ProvenanceStatement{}
+	for _, o := range options {
+		o(provenanceStatement)
+	}
+	withInTotoStatementType()(provenanceStatement)
+	withPredicateType()(provenanceStatement)
+	return provenanceStatement
+}
+
+func withInTotoStatementType() func(statement *ProvenanceStatement) {
+	return func(statement *ProvenanceStatement) {
+		statement.Type = inTotoStatementType
+	}
+}
+
+func withPredicateType() func(statement *ProvenanceStatement) {
+	return func(statement *ProvenanceStatement) {
+		statement.PredicateType = predicateType
+	}
+}
+
+func withPredicate(predicate SLSAProvenancePredicate) func(statement *ProvenanceStatement) {
+	return func(statement *ProvenanceStatement) {
+		statement.Predicate = predicate
+	}
+}
+
+func withSubject(subject SubjectStatement) func(statement *ProvenanceStatement) {
+	return func(statement *ProvenanceStatement) {
+		statement.Subject = subject
+	}
 }
