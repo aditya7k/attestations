@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/datasweet/jsonmap"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
@@ -27,15 +26,14 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 	// Act
 	attBytes, err := json.Marshal(statement)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error marshaling statement: %v\n", err)
-		return
+		assert.Fail(t, fmt.Sprintf("error marshalling statement: %v\n", err))
 	}
 
 	// Assert
 	var jsonMap map[string]interface{}
 	err = json.Unmarshal(attBytes, &jsonMap)
 	if err != nil {
-		return
+		assert.Fail(t, fmt.Sprintf("error unmarshalling statement: %v\n", err))
 	}
 
 	j := jsonmap.FromMap(jsonMap)
@@ -65,7 +63,7 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 func assertJsonString(t *testing.T, j *jsonmap.Json, expected string, key string) {
 	value := j.Get(key).AsString()
 	if value == "" {
-		t.Errorf("path %s does not exist", key)
+		assert.Fail(t, fmt.Sprintf("key not found: %s", key))
 	}
 	assert.Equal(t, expected, value, "for path: '%s' expected: '%s', actual: '%s'", key, expected, value)
 }
