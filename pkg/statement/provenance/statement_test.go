@@ -12,7 +12,7 @@ import (
 func Test_CreateProvenanceStatement(t *testing.T) {
 
 	// Arrange
-	statement := buildProvenanceStatement(PredicateStatementDTO{
+	predicateStatementDTO := PredicateStatementDTO{
 		configURI:          "https://github.com/example/repo",
 		configDigest:       map[string]string{"sha1": "abc123"},
 		configEntryPoint:   "build script",
@@ -20,7 +20,9 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 		predicateBuildType: "https://example.com/build/type",
 		subjectName:        "example.com/my-artifact",
 		subjectDigest:      map[string]string{"sha256": "abcd1234"},
-	})
+	}
+
+	statement := buildProvenanceStatement(predicateStatementDTO)
 
 	// Act
 	attBytes, err := json.Marshal(statement)
@@ -38,14 +40,26 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 
 	j := jsonmap.FromMap(jsonMap)
 
-	assertJsonString(t, j, "https://github.com/example/repo", "predicate.invocation.configSource.uri")
-	assertJsonString(t, j, "example.com/builder", "predicate.builder.id")
-	assertJsonString(t, j, "build script", "predicate.invocation.configSource.entryPoint")
-	assertJsonString(t, j, "example.com/my-artifact", "subject.name")
-	assertJsonString(t, j, "abcd1234", "subject.digest.sha256")
-	assertJsonString(t, j, "https://example.com/build/type", "predicate.buildType")
-	assertJsonString(t, j, "https://slsa.dev/provenance/v0.1", "predicateType")
-	assertJsonString(t, j, "https://in-toto.io/Statement/v0.1", "_type")
+	tests := []struct {
+		path          string
+		expectedValue string
+	}{
+		{"predicate.invocation.configSource.uri", predicateStatementDTO.configURI},
+		{"predicate.builder.id", predicateStatementDTO.predicateBuilderId},
+		{"predicate.invocation.configSource.entryPoint", predicateStatementDTO.configEntryPoint},
+		{"subject.name", predicateStatementDTO.subjectName},
+		{"subject.digest.sha256", predicateStatementDTO.subjectDigest["sha256"]},
+		{"predicate.buildType", predicateStatementDTO.predicateBuildType},
+		{"predicateType", predicateType},
+		{"_type", inTotoStatementType},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			assertJsonString(t, j, tt.expectedValue, tt.path)
+		})
+	}
+
 }
 
 func assertJsonString(t *testing.T, j *jsonmap.Json, expected string, key string) {
