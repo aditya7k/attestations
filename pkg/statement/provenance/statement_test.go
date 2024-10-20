@@ -25,7 +25,9 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 	attBytes := test_util.ToJson(t, statement)
 
 	// Assert
-	j := jsonmap.FromMap(test_util.FromJson(t, attBytes))
+	jsonMap := test_util.FromJson(t, attBytes)
+
+	json := jsonmap.FromMap(jsonMap)
 
 	tests := []struct {
 		path          string
@@ -43,7 +45,7 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
-			test_util.AssertJsonString(t, j, tt.expectedValue, tt.path)
+			test_util.AssertJsonString(t, json, tt.expectedValue, tt.path)
 		})
 	}
 
