@@ -1,10 +1,8 @@
 package provenance
 
 import (
-	"encoding/json"
-	"fmt"
+	"attestations/pkg/test_util"
 	"github.com/datasweet/jsonmap"
-	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -24,19 +22,10 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 	statement := buildProvenanceStatement(predicateStatementDTO)
 
 	// Act
-	attBytes, err := json.Marshal(statement)
-	if err != nil {
-		assert.Fail(t, fmt.Sprintf("error marshalling statement: %v\n", err))
-	}
+	attBytes := test_util.ToJson(t, statement)
 
 	// Assert
-	var jsonMap map[string]interface{}
-	err = json.Unmarshal(attBytes, &jsonMap)
-	if err != nil {
-		assert.Fail(t, fmt.Sprintf("error unmarshalling statement: %v\n", err))
-	}
-
-	j := jsonmap.FromMap(jsonMap)
+	j := jsonmap.FromMap(test_util.FromJson(t, attBytes))
 
 	tests := []struct {
 		path          string
@@ -54,16 +43,8 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
-			assertJsonString(t, j, tt.expectedValue, tt.path)
+			test_util.AssertJsonString(t, j, tt.expectedValue, tt.path)
 		})
 	}
 
-}
-
-func assertJsonString(t *testing.T, j *jsonmap.Json, expected string, key string) {
-	value := j.Get(key).AsString()
-	if value == "" {
-		assert.Fail(t, fmt.Sprintf("key not found: %s", key))
-	}
-	assert.Equal(t, expected, value, "for path: '%s' expected: '%s', actual: '%s'", key, expected, value)
 }
