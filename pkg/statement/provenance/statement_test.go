@@ -19,18 +19,16 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 		subjectDigest:      map[string]string{"sha256": "abcd1234"},
 	}
 
-	statement := buildProvenanceStatement(predicateStatementDTO)
-
 	// Act
-	attBytes := test_util.ToJson(t, statement)
+	statement := buildProvenanceStatement(predicateStatementDTO)
+	statementBytes := test_util.ToJson(t, statement)
 
 	// Assert
-	jsonMap := test_util.FromJson(t, attBytes)
-
-	json := jsonmap.FromMap(jsonMap)
+	statementJsonMap := test_util.FromJson(t, statementBytes)
+	statementJson := jsonmap.FromMap(statementJsonMap)
 
 	tests := []struct {
-		path          string
+		jsonPath      string
 		expectedValue string
 	}{
 		{"predicate.invocation.configSource.uri", predicateStatementDTO.configURI},
@@ -44,9 +42,8 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.path, func(t *testing.T) {
-			test_util.AssertJsonString(t, json, tt.expectedValue, tt.path)
+		t.Run(tt.jsonPath, func(t *testing.T) {
+			test_util.AssertJsonString(t, statementJson, tt.expectedValue, tt.jsonPath)
 		})
 	}
-
 }
