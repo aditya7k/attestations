@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
@@ -19,21 +18,14 @@ var publicKey []byte
 func TestLocalSigner_Sign(t *testing.T) {
 
 	//Arrange
-	sampleData := map[string]string{
-		"key": "value",
+	sampleDataBytes, err := getJsonBytes()
+	if err != nil {
+		t.Error(err)
 	}
 
-	sampleDataBytes, err := json.Marshal(sampleData)
+	signer, err := getSigner()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error marshaling statement: %v\n", err)
-		return
-	}
-
-	signer := LocalSigner{}
-	err = signer.LoadKeyPairBytes(privateKey, publicKey)
-	if err != nil {
-		t.Errorf("Failed to Load Key Pair: %v", err)
-		return
+		t.Error(err)
 	}
 
 	//Act
@@ -50,6 +42,16 @@ func TestLocalSigner_Sign(t *testing.T) {
 	}
 
 	assert.True(t, verified)
+}
+
+func getSigner() (LocalSigner, error) {
+
+	signer := LocalSigner{}
+	err := signer.LoadKeyPairBytes(privateKey, publicKey)
+	if err != nil {
+		return signer, fmt.Errorf("failed to Load Key Pair: %v", err)
+	}
+	return signer, err
 }
 
 func TestCreateAndVerifyTempJSONFile(t *testing.T) {
@@ -71,4 +73,17 @@ func TestCreateAndVerifyTempJSONFile(t *testing.T) {
 		t.Errorf("File does not exist at: %s", filePath)
 		return
 	}
+}
+
+func getJsonBytes() ([]byte, error) {
+
+	sampleData := map[string]string{
+		"key": "value",
+	}
+
+	sampleDataBytes, err := json.Marshal(sampleData)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling statement: %v", err)
+	}
+	return sampleDataBytes, err
 }
