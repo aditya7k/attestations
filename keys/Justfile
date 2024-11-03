@@ -1,0 +1,20 @@
+set shell := ["zsh", "-cu"]
+
+# default recipe for display help information
+default:
+    @just --list
+
+# constants
+
+# hello
+hello:
+    #!/usr/bin/env zsh
+    set -euxo pipefail
+    echo "Hello"
+
+# generate key pair
+keypair:
+    #!/usr/bin/env zsh
+    set -euxo pipefail
+    openssl ecparam -genkey -name secp256r1 -noout -out private-key.pem && openssl ec -in private-key.pem -pubout -out public-key.pem
+

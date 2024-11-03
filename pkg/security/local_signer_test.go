@@ -2,32 +2,52 @@ package security
 
 import (
 	"attestations/pkg/util"
-	"os"
+	_ "embed"
 	"testing"
 )
 
-func TestCreateAndVerifyTempJSONFile(t *testing.T) {
+//go:embed /keys/keypair-1/private-key.pem
+var privateKey []byte
 
-	// Define a sample JSON structure
+//go:embed /keys/keypair-1/public-key.pem
+var publicKey []byte
+
+func TestLocalSigner_Sign(t *testing.T) {
+
+	//Arrange
 	sampleData := map[string]string{
 		"key": "value",
 	}
 
-	// Call the function to create the temporary JSON file
-	filePath, err := util.CreateTempJSONFile(sampleData)
+	err, filePath := util.CreateJsonTempFile(sampleData, "LocalSigner_Sign*.json")
 	if err != nil {
 		t.Errorf("Failed to create temporary file: %v", err)
 		return
 	}
+	defer func(name string) { util.RemoveFile(name) }(filePath)
 
-	defer func(name string) {
-		err := os.Remove(name)
-		if err != nil {
-			t.Errorf("Failed to remove temporary file: %v", err)
-		}
-	}(filePath) // Clean up the file afterward
+	signer := LocalSigner{}
+	err = signer.LoadKeyPairBytes(privateKey, publicKey)
+	if err != nil {
+		t.Errorf("Failed to Load Key Pair: %v", err)
+		return
+	}
+	//Act
 
-	// Verify the file exists
+	//Assert
+
+}
+
+func TestCreateAndVerifyTempJSONFile(t *testing.T) {
+
+	sampleData := map[string]string{
+		"key": "value",
+	}
+
+	err, filePath := util.CreateJsonTempFile(sampleData)
+
+	defer func(name string) { util.RemoveFile(name) }(filePath)
+
 	exists, err := util.VerifyFileExists(filePath)
 	if err != nil {
 		t.Errorf("Failed to verify file existence: %v", err)
