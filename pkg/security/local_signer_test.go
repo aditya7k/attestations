@@ -29,14 +29,14 @@ func TestLocalSigner_Sign(t *testing.T) {
 	}
 
 	//Act
-	sign, err := signer.Sign(sampleDataBytes)
+	signature, err := signer.Sign(sampleDataBytes)
 	if err != nil {
 		t.Errorf("error signing message: %v\n", err)
 	}
-	assert.NotNil(t, sign)
+	assert.NotNil(t, signature)
 
 	//Assert
-	verified, err := signer.VerifySignature(sampleDataBytes, sign)
+	verified, err := signer.VerifySignature(sampleDataBytes, signature)
 	if err != nil {
 		t.Errorf("error verifying signature: %v\n", err)
 	}
