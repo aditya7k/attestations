@@ -3,13 +3,17 @@ package security
 import (
 	"attestations/pkg/util"
 	_ "embed"
+	"encoding/json"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
-//go:embed /keys/keypair-1/private-key.pem
+//go:embed keypair-1/private-key.pem
 var privateKey []byte
 
-//go:embed /keys/keypair-1/public-key.pem
+//go:embed keypair-1/public-key.pem
 var publicKey []byte
 
 func TestLocalSigner_Sign(t *testing.T) {
@@ -19,12 +23,11 @@ func TestLocalSigner_Sign(t *testing.T) {
 		"key": "value",
 	}
 
-	err, filePath := util.CreateJsonTempFile(sampleData, "LocalSigner_Sign*.json")
+	sampleDataBytes, err := json.Marshal(sampleData)
 	if err != nil {
-		t.Errorf("Failed to create temporary file: %v", err)
+		fmt.Fprintf(os.Stderr, "error marshaling statement: %v\n", err)
 		return
 	}
-	defer func(name string) { util.RemoveFile(name) }(filePath)
 
 	signer := LocalSigner{}
 	err = signer.LoadKeyPairBytes(privateKey, publicKey)
@@ -32,10 +35,21 @@ func TestLocalSigner_Sign(t *testing.T) {
 		t.Errorf("Failed to Load Key Pair: %v", err)
 		return
 	}
+
 	//Act
+	sign, err := signer.Sign(sampleDataBytes)
+	if err != nil {
+		t.Errorf("error signing message: %v\n", err)
+	}
+	assert.NotNil(t, sign)
 
 	//Assert
+	verified, err := signer.VerifySignature(sampleDataBytes, sign)
+	if err != nil {
+		t.Errorf("error verifying signature: %v\n", err)
+	}
 
+	assert.True(t, verified)
 }
 
 func TestCreateAndVerifyTempJSONFile(t *testing.T) {
@@ -44,7 +58,7 @@ func TestCreateAndVerifyTempJSONFile(t *testing.T) {
 		"key": "value",
 	}
 
-	err, filePath := util.CreateJsonTempFile(sampleData)
+	err, filePath := util.CreateJsonTempFile(sampleData, "CreateAndVerify*.json")
 
 	defer func(name string) { util.RemoveFile(name) }(filePath)
 
