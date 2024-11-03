@@ -1,34 +1,34 @@
 package provenance
 
 type PredicateStatementDTO struct { //nolint:maligned
-	configURI          string
-	configDigest       map[string]string
-	configEntryPoint   string
-	predicateBuilderId string
-	predicateBuildType string
-	subjectName        string
-	subjectDigest      map[string]string
+	ConfigURI          string
+	ConfigDigest       map[string]string
+	ConfigEntryPoint   string
+	PredicateBuilderId string
+	PredicateBuildType string
+	SubjectName        string
+	SubjectDigest      map[string]string
 }
 
-func buildProvenanceStatement(provenanceStatementDTO PredicateStatementDTO) *Statement {
+func BuildProvenanceStatement(provenanceStatementDTO PredicateStatementDTO) *Statement {
 
 	invocationConfigSource := NewInvocationConfigSource(
-		withConfigSourceUri(provenanceStatementDTO.configURI),
-		withConfigSourceDigest(provenanceStatementDTO.configDigest),
-		withConfigSourceEntryPoint(provenanceStatementDTO.configEntryPoint))
+		withConfigSourceUri(provenanceStatementDTO.ConfigURI),
+		withConfigSourceDigest(provenanceStatementDTO.ConfigDigest),
+		withConfigSourceEntryPoint(provenanceStatementDTO.ConfigEntryPoint))
 
-	predicateBuilder := PredicateBuilder{ID: provenanceStatementDTO.predicateBuilderId}
+	predicateBuilder := PredicateBuilder{ID: provenanceStatementDTO.PredicateBuilderId}
 
 	predicateInvocation := PredicateInvocation{ConfigSource: *invocationConfigSource}
 
 	predicate := NewSLSAProvenancePredicate(
-		withBuildType(provenanceStatementDTO.predicateBuildType),
+		withBuildType(provenanceStatementDTO.PredicateBuildType),
 		withPredicateBuilder(predicateBuilder),
 		withPredicateInvocation(predicateInvocation))
 
 	subjectStatement := NewSubjectStatement(
-		withSubjectName(provenanceStatementDTO.subjectName),
-		withSubjectDigest(provenanceStatementDTO.subjectDigest))
+		withSubjectName(provenanceStatementDTO.SubjectName),
+		withSubjectDigest(provenanceStatementDTO.SubjectDigest))
 
 	statement := NewProvenanceStatement(
 		withPredicate(*predicate),

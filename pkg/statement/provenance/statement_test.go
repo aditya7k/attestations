@@ -10,17 +10,17 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 
 	// Arrange
 	predicateStatementDTO := PredicateStatementDTO{
-		configURI:          "https://github.com/example/repo",
-		configDigest:       map[string]string{"sha1": "abc123"},
-		configEntryPoint:   "build script",
-		predicateBuilderId: "example.com/builder",
-		predicateBuildType: "https://example.com/build/type",
-		subjectName:        "example.com/my-artifact",
-		subjectDigest:      map[string]string{"sha256": "abcd1234"},
+		ConfigURI:          "https://github.com/example/repo",
+		ConfigDigest:       map[string]string{"sha1": "abc123"},
+		ConfigEntryPoint:   "build script",
+		PredicateBuilderId: "example.com/builder",
+		PredicateBuildType: "https://example.com/build/type",
+		SubjectName:        "example.com/my-artifact",
+		SubjectDigest:      map[string]string{"sha256": "abcd1234"},
 	}
 
 	// Act
-	statement := buildProvenanceStatement(predicateStatementDTO)
+	statement := BuildProvenanceStatement(predicateStatementDTO)
 	statementBytes := test_util.ToJson(t, statement)
 
 	// Assert
@@ -31,12 +31,12 @@ func Test_CreateProvenanceStatement(t *testing.T) {
 		jsonPath      string
 		expectedValue string
 	}{
-		{"predicate.invocation.configSource.uri", predicateStatementDTO.configURI},
-		{"predicate.builder.id", predicateStatementDTO.predicateBuilderId},
-		{"predicate.invocation.configSource.entryPoint", predicateStatementDTO.configEntryPoint},
-		{"subject.name", predicateStatementDTO.subjectName},
-		{"subject.digest.sha256", predicateStatementDTO.subjectDigest["sha256"]},
-		{"predicate.buildType", predicateStatementDTO.predicateBuildType},
+		{"predicate.invocation.configSource.uri", predicateStatementDTO.ConfigURI},
+		{"predicate.builder.id", predicateStatementDTO.PredicateBuilderId},
+		{"predicate.invocation.configSource.entryPoint", predicateStatementDTO.ConfigEntryPoint},
+		{"subject.name", predicateStatementDTO.SubjectName},
+		{"subject.digest.sha256", predicateStatementDTO.SubjectDigest["sha256"]},
+		{"predicate.buildType", predicateStatementDTO.PredicateBuildType},
 		{"predicateType", predicateType},
 		{"_type", inTotoStatementType},
 	}
